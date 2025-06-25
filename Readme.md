@@ -29,6 +29,7 @@
 
 -   Created \`User\` schema with the following fields:
 
+```
     const userSchema = new mongoose.Schema({
       fullname: {
         firstname: {
@@ -57,7 +58,7 @@
         type: String
       }
     }, { timestamps: true });
-
+```
 
 <a id="org236e392"></a>
 
