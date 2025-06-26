@@ -1,53 +1,59 @@
 
-# Table of Contents
 
-1.  [Day 1 - June 25, 2025](#org1d84b53)
-    1.  [Backend Setup](#orgf8224d8)
-    2.  [User Schema](#orgd8dd7c6)
-    3.  [Schema Notes](#org236e392)
-    4.  [Installed NPM Packages](#org9bd6162)
-    5.  [Next Steps](#org310ee0a)
+# 🚕 Yoober – A Full-Stack Uber Clone (MERN)
+
+This document is a day-wise dev log of ****Yoober****, a full-stack Uber clone built using the ****MERN**** stack.
+
+Each entry includes:
+
+-   ✅ Tasks done
+-   📖 Code snippets
+-   🧠 Lessons learned
+-   🧪 Errors + Debugging steps
+
+&#x2014;
 
 
-<a id="org1d84b53"></a>
-
-# Day 1 - June 25, 2025
+# 📆 Day 1 – June 25, 2025
 
 
-<a id="orgf8224d8"></a>
+## ✅ Backend Setup
 
-## Backend Setup
-
--   Initialized backend with Express
--   Initialized a Git repository and pushed to GitHub
+-   Initialized Express backend
+-   Created Git repository and pushed initial commit to GitHub
 -   Connected to MongoDB using Mongoose
 
 
-<a id="orgd8dd7c6"></a>
+## 🧠 User Schema (What a User Looks Like)
 
-## User Schema
+Created a Mongoose schema for users with the following fields:
 
--   Created \`User\` schema with the following fields:
+-   \`fullname\`:
+    -   \`firstname\`: required, min 3 chars
+    -   \`lastname\`: required, min 3 chars
+-   \`email\`: unique, required, min 5 chars
+-   \`password\`: required, not returned in queries (\`select: false\`)
+-   \`socketId\`: for future real-time features (e.g. live location)
+-   \`timestamps\`: auto-generates \`createdAt\` and \`updatedAt\`
 
-```
     const userSchema = new mongoose.Schema({
       fullname: {
         firstname: {
           type: String,
           required: true,
-          minlength: [3, 'First name must be atleast 3 characters long']
+          minlength: [3, 'First name must be at least 3 characters long']
         },
         lastname: {
           type: String,
           required: true,
-          minlength: [3, 'First name must be atleast 3 characters long']
+          minlength: [3, 'Last name must be at least 3 characters long']
         }
       },
       email: {
         type: String,
         required: true,
         unique: true,
-        minlength: [5, 'Email must be atleast 5 characters long']
+        minlength: [5, 'Email must be at least 5 characters long']
       },
       password: {
         type: String,
@@ -58,37 +64,103 @@
         type: String
       }
     }, { timestamps: true });
-```
-
-<a id="org236e392"></a>
-
-## Schema Notes
-
--   \`fullname\` is a nested object containing \`firstname\` and \`lastname\`, both with validation rules.
--   \`email\` is unique and required, with basic validation.
--   \`password\` uses \`select: false\` to prevent it from being returned in query results.
--   \`socketId\` will be used for real-time features via Socket.io.
--   \`timestamps: true\` adds \`createdAt\` and \`updatedAt\` automatically.
 
 
-<a id="org9bd6162"></a>
+## 📦 Installed NPM Packages
 
-## Installed NPM Packages
+-   express
+-   mongoose
+-   dotenv
+-   cors
+-   cookie-parser
+-   bcrypt
+-   jsonwebtoken
 
--   \`express\`: Backend server
--   \`mongoose\`: ODM for MongoDB
--   \`dotenv\`: Load env variables from \`.env\`
--   \`cors\`: Handle cross-origin requests
--   \`cookie-parser\`: Parse cookies (used in auth)
--   \`bcrypt\`: Hash passwords securely
--   \`jsonwebtoken\`: Issue and verify JWTs
+&#x2014;
 
 
-<a id="org310ee0a"></a>
+# 📆 Day 2 – June 26, 2025
 
-## Next Steps
 
--   Add hashing with bcrypt before saving passwords
--   Build \`/register\` and \`/login\` routes
--   Setup JWT generation on login and secure private routes
+## ✅ What I Did
+
+-   Ran and tested the code written on Day 1
+-   Created helper methods in user schema:
+    -   \`hashPassword\`
+    -   \`comparePassword\`
+    -   \`generateAuthToken\`
+-   Created service layer (\`createUser\`)
+-   Created controller (\`registerUser\`)
+-   Set up \`/register\` route with validation
+
+
+## 🧨 Errors Faced
+
+
+### MongoDB Namespace Error
+
+    MongoServerError: Invalid namespace specified: /undefined.users
+
+Cause:
+
+-   I was importing MongoDB base URL from \`.env\`
+-   And trying to append the DB name from a \`constants\` file
+-   This resulted in an invalid URL like: \`/undefined.users\`
+
+
+### Missing Package Imports
+
+-   Forgot to import \`bcrypt\` and \`jsonwebtoken\` in \`user.models.js\`
+
+
+## 🛠️ How I Fixed It
+
+-   Carefully read the full error trace
+-   Removed the constants file entirely
+-   Used the ****full MongoDB URI**** directly from \`.env\` like:
+
+    MONGO_URI=mongodb://localhost:27017/yoober
+
+-   Added missing imports in model file:
+
+    const bcrypt = require('bcrypt');
+    const jwt = require('jsonwebtoken');
+
+
+## 🧠 Notes / Lessons Learned
+
+-   Always validate env vars with \`console.log\`
+-   Don’t split connection strings unless necessary
+-   Error messages are usually very helpful
+-   Used StackOverflow (no GPT!) to debug and learn better
+
+
+## 📤 Sample Register Response
+
+    {
+      "token": "<JWT token>",
+      "newUser": {
+        "fullname": {
+          "firstname": "Alice",
+          "lastname": "Smith"
+        },
+        "email": "alice@example.com"
+      }
+    }
+
+
+## 🔄 Auth Flow Summary
+
+    Client --> /register (Route)
+           --> registerUser (Controller)
+           --> createUser (Service)
+           --> save in MongoDB (Model)
+           --> return token + user
+
+
+## ✅ Features Completed
+
+-   Working \`/register\` endpoint with hashed password and JWT
+-   Fixed critical MongoDB connection issue
+-   Auth utilities working as expected
 
