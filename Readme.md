@@ -36,6 +36,7 @@ Created a Mongoose schema for users with the following fields:
 -   \`socketId\`: for future real-time features (e.g. live location)
 -   \`timestamps\`: auto-generates \`createdAt\` and \`updatedAt\`
 
+    ```
     const userSchema = new mongoose.Schema({
       fullname: {
         firstname: {
@@ -64,6 +65,7 @@ Created a Mongoose schema for users with the following fields:
         type: String
       }
     }, { timestamps: true });
+    ```
 
 
 ## 📦 Installed NPM Packages
