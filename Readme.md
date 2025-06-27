@@ -36,8 +36,8 @@ Created a Mongoose schema for users with the following fields:
 -   \`socketId\`: for future real-time features (e.g. live location)
 -   \`timestamps\`: auto-generates \`createdAt\` and \`updatedAt\`
 
-    ```
-    const userSchema = new mongoose.Schema({
+``` 
+const userSchema = new mongoose.Schema({
       fullname: {
         firstname: {
           type: String,
@@ -65,8 +65,8 @@ Created a Mongoose schema for users with the following fields:
         type: String
       }
     }, { timestamps: true });
-    ```
 
+```
 
 ## 📦 Installed NPM Packages
 
@@ -165,4 +165,66 @@ Cause:
 -   Working \`/register\` endpoint with hashed password and JWT
 -   Fixed critical MongoDB connection issue
 -   Auth utilities working as expected
+
+
+# 📆 Day 3 – June 27, 2025
+
+
+## ✅ What I Did
+
+-   Built the \`/login\` route for user authentication
+-   Added middleware to authorize user based on JWT token
+-   Created logout functionality using token blacklisting (with 24hr TTL)
+
+
+## 🔐 Login Route
+
+-   Looked for user by email:
+
+    const user = await User.findOne({ email }).select('+password');
+
+-   If user not found:
+
+    return res.status(401).json({ message: 'Invalid email or password' });
+
+-   Compared password using \`comparePassword\` method
+-   If match, returned a new JWT token
+
+
+## 🛡️ Auth Middleware
+
+Purpose: To protect private routes (like user profile)
+
+Steps:
+
+1.  Check if a token is present (typically in headers or cookies)
+2.  If no token → \`401 Unauthorized\`
+3.  If token is present → verify the JWT
+4.  Extract \`<sub>id</sub>\` from token payload
+5.  Use \`<sub>id</sub>\` to fetch the user from the database
+6.  Attach user info to \`req.user\` and continue
+
+
+## 🚪 Logout Logic
+
+Implemented logout using a ****token blacklist strategy****:
+
+-   Stored blacklisted tokens in DB with TTL of 24 hours
+-   Every protected route checks if token is blacklisted
+-   If yes → respond with \`401 Unauthorized\`
+
+
+## 🧠 Notes
+
+-   Used \`.select(&rsquo;+password&rsquo;)\` in \`login\` because password is excluded by default
+-   Middleware is reusable and will be used in all protected routes
+-   JWTs are stateless by default; blacklisting adds state for logout tracking
+
+
+## ✅ Features Completed
+
+-   Login route with password check and token issue
+-   Auth middleware to verify and attach user
+-   Logout using token blacklist with TTL = 24hrs
+-   Basic authentication workflow completed
 

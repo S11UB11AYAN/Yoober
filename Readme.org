@@ -145,3 +145,52 @@ Client --> /register (Route)
 - Working `/register` endpoint with hashed password and JWT
 - Fixed critical MongoDB connection issue
 - Auth utilities working as expected
+
+* 📆 Day 3 – June 27, 2025
+
+** ✅ What I Did
+- Built the `/login` route for user authentication
+- Added middleware to authorize user based on JWT token
+- Created logout functionality using token blacklisting (with 24hr TTL)
+
+** 🔐 Login Route
+- Looked for user by email:
+#+BEGIN_SRC javascript
+const user = await User.findOne({ email }).select('+password');
+#+END_SRC
+
+- If user not found:
+#+BEGIN_SRC javascript
+return res.status(401).json({ message: 'Invalid email or password' });
+#+END_SRC
+
+- Compared password using `comparePassword` method
+- If match, returned a new JWT token
+
+** 🛡️ Auth Middleware
+Purpose: To protect private routes (like user profile)
+
+Steps:
+1. Check if a token is present (typically in headers or cookies)
+2. If no token → `401 Unauthorized`
+3. If token is present → verify the JWT
+4. Extract `_id` from token payload
+5. Use `_id` to fetch the user from the database
+6. Attach user info to `req.user` and continue
+
+** 🚪 Logout Logic
+Implemented logout using a **token blacklist strategy**:
+- Stored blacklisted tokens in DB with TTL of 24 hours
+- Every protected route checks if token is blacklisted
+- If yes → respond with `401 Unauthorized`
+
+** 🧠 Notes
+- Used `.select('+password')` in `login` because password is excluded by default
+- Middleware is reusable and will be used in all protected routes
+- JWTs are stateless by default; blacklisting adds state for logout tracking
+
+** ✅ Features Completed
+- Login route with password check and token issue
+- Auth middleware to verify and attach user
+- Logout using token blacklist with TTL = 24hrs
+- Basic authentication workflow completed
