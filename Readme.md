@@ -1,14 +1,13 @@
 
-
 # 🚕 Yoober – A Full-Stack Uber Clone (MERN)
 
-This document is a day-wise dev log of ****Yoober****, a full-stack Uber clone built using the ****MERN**** stack.
+This document is a day-wise developer journal for ****Yoober****, a full-stack Uber clone built using the ****MERN**** stack.
 
-Each entry includes:
+Each day&rsquo;s entry includes:
 
--   ✅ Tasks done
+-   ✅ Work done
 -   📖 Code snippets
--   🧠 Lessons learned
+-   🧠 Learnings
 -   🧪 Errors + Debugging steps
 
 &#x2014;
@@ -28,45 +27,26 @@ Each entry includes:
 
 Created a Mongoose schema for users with the following fields:
 
--   \`fullname\`:
-    -   \`firstname\`: required, min 3 chars
-    -   \`lastname\`: required, min 3 chars
--   \`email\`: unique, required, min 5 chars
--   \`password\`: required, not returned in queries (\`select: false\`)
--   \`socketId\`: for future real-time features (e.g. live location)
--   \`timestamps\`: auto-generates \`createdAt\` and \`updatedAt\`
-
-``` 
-const userSchema = new mongoose.Schema({
-      fullname: {
-        firstname: {
-          type: String,
-          required: true,
-          minlength: [3, 'First name must be at least 3 characters long']
-        },
-        lastname: {
-          type: String,
-          required: true,
-          minlength: [3, 'Last name must be at least 3 characters long']
-        }
-      },
-      email: {
-        type: String,
-        required: true,
-        unique: true,
-        minlength: [5, 'Email must be at least 5 characters long']
-      },
-      password: {
-        type: String,
-        required: true,
-        select: false
-      },
-      socketId: {
-        type: String
-      }
-    }, { timestamps: true });
+-   \`fullname\`: nested object with \`firstname\` and \`lastname\`, both required and at least 3 characters long
+-   \`email\`: unique, required, lowercase
+-   \`password\`: required and hidden from query results
+-   \`socketId\`: placeholder for future Socket.IO features
+-   \`timestamps\`: auto-generated \`createdAt\` and \`updatedAt\`
 
 ```
+    const userSchema = new mongoose.Schema({
+      fullname: {
+        firstname: { type: String, required: true, minlength: 3 },
+        lastname: { type: String, required: true, minlength: 3 }
+      },
+      email: {
+        type: String, required: true, unique: true, minlength: 5
+      },
+      password: { type: String, required: true, select: false },
+      socketId: { type: String }
+    }, { timestamps: true });
+```
+
 
 ## 📦 Installed NPM Packages
 
@@ -86,14 +66,13 @@ const userSchema = new mongoose.Schema({
 
 ## ✅ What I Did
 
--   Ran and tested the code written on Day 1
--   Created helper methods in user schema:
+-   Created helper methods in the User model:
     -   \`hashPassword\`
     -   \`comparePassword\`
     -   \`generateAuthToken\`
--   Created service layer (\`createUser\`)
--   Created controller (\`registerUser\`)
--   Set up \`/register\` route with validation
+-   Built \`registerUser\` controller
+-   Created \`createUser\` service
+-   Added \`/register\` route with validation using express-validator
 
 
 ## 🧨 Errors Faced
@@ -103,38 +82,30 @@ const userSchema = new mongoose.Schema({
 
     MongoServerError: Invalid namespace specified: /undefined.users
 
-Cause:
 
--   I was importing MongoDB base URL from \`.env\`
--   And trying to append the DB name from a \`constants\` file
--   This resulted in an invalid URL like: \`/undefined.users\`
+### Forgot to Import bcrypt & jwt
 
-
-### Missing Package Imports
-
--   Forgot to import \`bcrypt\` and \`jsonwebtoken\` in \`user.models.js\`
+-   \`bcrypt\` and \`jsonwebtoken\` were not imported in \`user.models.js\`
 
 
 ## 🛠️ How I Fixed It
 
--   Carefully read the full error trace
--   Removed the constants file entirely
--   Used the ****full MongoDB URI**** directly from \`.env\` like:
+-   Removed the constants file (was splitting Mongo URI and DB name)
+-   Used full MongoDB URI from \`.env\`:
 
     MONGO_URI=mongodb://localhost:27017/yoober
 
--   Added missing imports in model file:
+-   Added missing imports in the model:
 
     const bcrypt = require('bcrypt');
     const jwt = require('jsonwebtoken');
 
 
-## 🧠 Notes / Lessons Learned
+## 🧠 Notes
 
--   Always validate env vars with \`console.log\`
--   Don’t split connection strings unless necessary
--   Error messages are usually very helpful
--   Used StackOverflow (no GPT!) to debug and learn better
+-   Always verify environment variable values using \`console.log\`
+-   Avoid splitting Mongo URIs unless absolutely needed
+-   Reading the stack trace and using StackOverflow helped debug it without AI
 
 
 ## 📤 Sample Register Response
@@ -151,80 +122,124 @@ Cause:
     }
 
 
-## 🔄 Auth Flow Summary
-
-    Client --> /register (Route)
-           --> registerUser (Controller)
-           --> createUser (Service)
-           --> save in MongoDB (Model)
-           --> return token + user
-
-
 ## ✅ Features Completed
 
--   Working \`/register\` endpoint with hashed password and JWT
--   Fixed critical MongoDB connection issue
--   Auth utilities working as expected
+-   Working \`/register\` route
+-   Password hashing + JWT generation
+-   Environment bug resolved
+
+&#x2014;
 
 
 # 📆 Day 3 – June 27, 2025
 
 
-## ✅ What I Did
+## ✅ Login Flow (User)
 
--   Built the \`/login\` route for user authentication
--   Added middleware to authorize user based on JWT token
--   Created logout functionality using token blacklisting (with 24hr TTL)
-
-
-## 🔐 Login Route
-
--   Looked for user by email:
+-   Built \`/login\` route
+-   Verified if email exists using:
 
     const user = await User.findOne({ email }).select('+password');
 
--   If user not found:
-
-    return res.status(401).json({ message: 'Invalid email or password' });
-
 -   Compared password using \`comparePassword\` method
--   If match, returned a new JWT token
+-   Returned JWT token if successful
+-   Returned \`401 Unauthorized\` if email or password was incorrect
 
 
 ## 🛡️ Auth Middleware
 
-Purpose: To protect private routes (like user profile)
+Purpose: To protect private routes
 
 Steps:
 
-1.  Check if a token is present (typically in headers or cookies)
-2.  If no token → \`401 Unauthorized\`
-3.  If token is present → verify the JWT
-4.  Extract \`<sub>id</sub>\` from token payload
-5.  Use \`<sub>id</sub>\` to fetch the user from the database
-6.  Attach user info to \`req.user\` and continue
+1.  Check if token is provided in headers/cookie
+2.  If not present → \`401 Unauthorized\`
+3.  If present → verify JWT
+4.  Extract \`<sub>id</sub>\` from payload
+5.  Fetch user from DB → attach to \`req.user\`
 
 
-## 🚪 Logout Logic
+## 🚪 Logout (User)
 
-Implemented logout using a ****token blacklist strategy****:
-
--   Stored blacklisted tokens in DB with TTL of 24 hours
--   Every protected route checks if token is blacklisted
--   If yes → respond with \`401 Unauthorized\`
-
-
-## 🧠 Notes
-
--   Used \`.select(&rsquo;+password&rsquo;)\` in \`login\` because password is excluded by default
--   Middleware is reusable and will be used in all protected routes
--   JWTs are stateless by default; blacklisting adds state for logout tracking
+-   Implemented logout by blacklisting JWT tokens
+-   Added tokens to blacklist DB with 24hr TTL
+-   Middleware checks if token is blacklisted before accessing any protected route
 
 
 ## ✅ Features Completed
 
--   Login route with password check and token issue
--   Auth middleware to verify and attach user
--   Logout using token blacklist with TTL = 24hrs
--   Basic authentication workflow completed
+-   Login flow with token
+-   Middleware for protected routes
+-   Logout via token blacklist
+
+&#x2014;
+
+
+# 📆 Day 4 – June 28, 2025 (Midnight Coding)
+
+
+## ✅ Captain (Driver) Schema
+
+Created a new schema for Captain (like Uber drivers)
+
+Fields:
+
+-   \`fullname\`: \`firstname\`, \`lastname\`
+-   \`email\`: unique, valid
+-   \`password\`: required and hidden
+-   \`socketId\`: optional
+-   \`status\`: \`active\` / \`inactive\` (default: inactive)
+-   \`vehicle\`: nested object containing:
+    -   \`color\`, \`plate\`, \`capacity\`, \`vehicleType\` (car/motorcycle/auto)
+    -   \`location\`: \`lat\`, \`lng\`
+
+    const captainSchema = new mongoose.Schema({
+      fullname: {
+        firstname: { type: String, required: true, minlength: 3 },
+        lastname: { type: String, required: true, minlength: 3 }
+      },
+      email: {
+        type: String, required: true, unique: true,
+        lowercase: true, match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
+      },
+      password: { type: String, required: true, select: false },
+      socketId: { type: String },
+      status: { type: String, enum: ['active', 'inactive'], default: 'inactive' },
+      vehicle: {
+        color: { type: String, required: true, minlength: 3 },
+        plate: { type: String, required: true, minlength: 3 },
+        capacity: { type: Number, required: true, min: 1 },
+        vehicleType: { type: String, required: true, enum: ['car', 'motorcycle', 'auto'] },
+        location: { lat: Number, lng: Number }
+      }
+    }, { timestamps: true });
+
+
+## 🔐 Duplicate Email Check
+
+-   During registration for both User and Captain:
+    -   Checked both collections to prevent duplicate emails
+    -   If already registered → returned 400 error
+
+
+## 🧑‍✈️ Captain Authentication
+
+-   Registered Captain using the same logic as User
+-   Implemented Captain \`/profile\` route (protected)
+-   Used captain-specific middleware to extract data from token and attach to \`req.captain\`
+
+
+## 🚪 Captain Logout
+
+-   Implemented same token-blacklist logic for logout
+-   Tokens expire after 24 hours
+-   Protected routes for Captain check blacklist before continuing
+
+
+## ✅ Features Completed
+
+-   Captain register route with validation
+-   Captain profile fetch (protected route)
+-   Captain logout with token blacklist
+-   Full authentication setup done for both User and Captain
 
