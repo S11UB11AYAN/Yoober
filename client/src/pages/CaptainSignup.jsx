@@ -4,15 +4,15 @@ import { Link } from "react-router-dom";
 const CaptainSignup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [firstname, setFirstName] = useState("");
+  const [lastname, setLastName] = useState("");
   const [userData, setUserData] = useState({});
   const submitHandler = (e) => {
     e.preventDefault();
     setUserData({
-      fullName: {
-        firstName: firstName,
-        lastName: lastName,
+      fullname: {
+        firstname: firstname,
+        lastname: lastname,
       },
       email: email,
       password: password,
@@ -44,7 +44,7 @@ const CaptainSignup = () => {
               required
               className="bg-[#eee] w-1/2  rounded px-4 py-2 border  text-lg placeholder:text-base"
               placeholder="Firstname"
-              value={firstName}
+              value={firstname}
               onChange={(e) => {
                 setFirstName(e.target.value);
               }}
@@ -54,7 +54,7 @@ const CaptainSignup = () => {
               required
               className="bg-[#eee] w-1/2 rounded px-4 py-2 border  text-lg placeholder:text-base"
               placeholder="Lastname"
-              value={lastName}
+              value={lastname}
               onChange={(e) => {
                 setLastName(e.target.value);
               }}
